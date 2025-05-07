@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TimeNest | Attendance Tracker</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .disabled-button {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .toast {
+      @apply fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow-lg transition-all duration-500 ease-in-out z-50;
+    }
+    .attendance-table th, .attendance-table td {
+      @apply border border-gray-300 px-4 py-2 text-sm;
+    }
+    .attendance-table th {
+      @apply bg-gray-100 font-semibold;
+    }
+    .attendance-table tr:nth-child(even) {
+      @apply bg-gray-50;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-gray-100 to-white min-h-screen font-sans text-gray-700">
+
+  <!-- Brand Header -->
+  <div class="bg-blue-600 text-white py-4 shadow-md">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row justify-between items-center gap-2">
+      <h1 class="text-xl md:text-2xl font-bold tracking-wide">🕒 TimeNest</h1>
+      <span class="italic text-sm sm:text-base opacity-90">Smart Attendance Manager</span>
+    </div>
+  </div>
+
+  <div class="max-w-4xl mx-auto p-4 sm:p-6">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+      <h2 class="text-xl sm:text-2xl font-semibold text-center sm:text-left">📅 Attendance Tracker</h2>
+      <button id="clearDataButton" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow transition w-full sm:w-auto">
+        Clear All Data
+      </button>
+    </div>
+
+    
+    <!-- Dropdown -->
+    <select id="employeeDropdown" class="w-full mb-6 p-3 border rounded shadow focus:ring-2 focus:ring-blue-400">
+        <option value="">👤 Select an Employee</option>
+        <option value="1">PATEL SUJAL NITINBHAI</option>
+        <option value="2">VIRANI HARSHIL KHODABHAI</option>
+        <option value="3">BHALODIYA DHRUV ASHVINBHAI</option>
+        <option value="4">TALAVIYA CHINTAN GELABHAI</option>
+        <option value="5">BAVASIYA DATT NARESHBHAI</option>
+        <option value="6">MAKANI HETVI ASHVINBHAI</option>
+        <option value="7">GOSWAMI SUJAL ASHOKKUMAR</option>
+        <option value="8">DHANANI JANVI PARSOTTAMBHAI</option>
+          <option value="9">PARMAR NAVNEET JITENDRABHAI</option>
+          <option value="10">BHATSAR NISARG DINESHBHAI</option>
+          <option value="11">NAKRANI VRUTI ASHOKBHAI</option>
+          <option value="12">GADAGI MEGHANA CHANDRASHEKHAR</option>
+          <option value="13">PRAJAPATI SMIT GAUTAMBHAI</option>
+          <option value="14">RAKHOLIYA ASHISH KANUBHAI</option>
+          <option value="15">PARMAR RUTIK HARSHBHAI</option>
+          <option value="16">KHANDIVAL YASH SANJAYBHAI</option>
+          <option value="17">Mishra unnati yogeshbhai</option>
+          <option value="18">Patel Jay Nareshbha</option>
+          <option value="19">Vyas maharshi devendrakumar</option>
+          <option value="20">Solanki kishan arunbhai</option>
+          <option value="21">Patani mehul sunil bhai</option>
+          
+      </select>
+  
+    <!-- Action Buttons -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+      <button id="startButton" class="bg-green-500 hover:bg-green-600 text-white py-2 px-3 rounded shadow text-sm sm:text-base">Start Day</button>
+      <button id="endButton" class="bg-red-500 hover:bg-red-600 text-white py-2 px-3 rounded shadow text-sm sm:text-base">End Day</button>
+      <button id="lunchStartButton" class="bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-3 rounded shadow text-sm sm:text-base">Start Lunch</button>
+      <button id="lunchEndButton" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded shadow text-sm sm:text-base">End Lunch</button>
+      <button id="leaveButton" class="bg-purple-500 hover:bg-purple-600 text-white py-2 px-3 rounded shadow col-span-2 sm:col-span-1 text-sm sm:text-base">Mark Leave</button>
+    </div>
+
+    <!-- Attendance Records -->
+    <div class="bg-white p-4 rounded shadow-md">
+      <h3 class="text-lg font-semibold mb-4">📝 Attendance Records</h3>
+      <div class="overflow-x-auto max-h-96">
+        <table class="attendance-table w-full min-w-[500px] text-left">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Event Type</th>
+              <th>Time</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+          <tbody id="attendanceTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed top-4 right-4 space-y-2 z-50"></div>
+
+  <!-- Modal -->
+  <div id="passwordModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden items-center justify-center z-40 px-4">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
+      <h3 class="text-lg font-semibold mb-4">🔒 Enter Admin Password</h3>
+      <input type="password" id="adminPassword" class="border rounded w-full p-2 mb-4" placeholder="Password" />
+      <div class="flex justify-end space-x-2">
+        <button id="cancelPassword" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded">Cancel</button>
+        <button id="confirmClear" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Your existing JS remains unchanged -->
+  <script>
+    const ADMIN_PASSWORD = "snp@123";
+    let selectedEmployeeId = '';
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast bg-${type === 'error' ? 'red' : 'green'}-500`;
+      toast.innerText = message;
+      document.getElementById('toastContainer').appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    function formatDate(date) {
+      const d = new Date(date);
+      return `${d.getDate().toString().padStart(2, '0')}-${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getFullYear().toString().slice(-2)}`;
+    }
+
+    function getTodayDate() {
+      return new Date().toISOString().split('T')[0];
+    }
+
+    function isEventRecordedToday(employeeId, eventType) {
+      const today = getTodayDate();
+      const data = JSON.parse(localStorage.getItem('attendanceData')) || [];
+      return data.some(r => r.employee_id === employeeId && r.event_type === eventType && r.timestamp.startsWith(today));
+    }
+
+    function updateButtonStates() {
+      if (!selectedEmployeeId) return;
+      const buttons = {
+        'day_start': startButton,
+        'day_end': endButton,
+        'lunch_start': lunchStartButton,
+        'lunch_end': lunchEndButton
+      };
+      for (let [type, btn] of Object.entries(buttons)) {
+        btn.disabled = isEventRecordedToday(selectedEmployeeId, type);
+        btn.classList.toggle('disabled-button', btn.disabled);
+      }
+      endButton.disabled = !isEventRecordedToday(selectedEmployeeId, 'day_start');
+      lunchEndButton.disabled = !isEventRecordedToday(selectedEmployeeId, 'lunch_start');
+    }
+
+    function loadCurrentStatus() {
+      const data = JSON.parse(localStorage.getItem('attendanceData')) || [];
+      const table = document.getElementById('attendanceTableBody');
+      table.innerHTML = '';
+      const today = new Date().toISOString().split('T')[0];
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+      const filtered = data.filter(r => 
+        r.employee_id === selectedEmployeeId &&
+        r.timestamp >= threeMonthsAgo.toISOString() &&
+        r.timestamp <= today + 'T23:59:59'
+      ).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      if (filtered.length === 0) {
+        table.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-400">No records found.</td></tr>`;
+        return;
+      }
+
+      filtered.forEach(r => {
+        const d = new Date(r.timestamp);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${formatDate(d)}</td>
+          <td>${r.event_type.replace('_', ' ').toUpperCase()}</td>
+          <td>${d.toLocaleTimeString()}</td>
+          <td>${r.reason || '-'}</td>
+        `;
+        table.appendChild(tr);
+      });
+    }
+
+    function recordAttendance(type) {
+      if (!selectedEmployeeId) return showToast('Select an employee!', 'error');
+
+      const preReqs = {
+        'day_end': 'day_start',
+        'lunch_end': 'lunch_start'
+      };
+
+      if (preReqs[type] && !isEventRecordedToday(selectedEmployeeId, preReqs[type])) {
+        return showToast(`You must record "${preReqs[type].replace('_', ' ')}" first.`, 'error');
+      }
+
+      if (isEventRecordedToday(selectedEmployeeId, type)) {
+        return showToast(`Already recorded ${type.replace('_', ' ')} today.`, 'error');
+      }
+
+      const record = {
+        employee_id: selectedEmployeeId,
+        event_type: type,
+        timestamp: new Date().toISOString()
+      };
+
+      const data = JSON.parse(localStorage.getItem('attendanceData')) || [];
+      data.push(record);
+      localStorage.setItem('attendanceData', JSON.stringify(data));
+
+      showToast(`${type.replace('_', ' ')} recorded`);
+      loadCurrentStatus();
+      updateButtonStates();
+    }
+
+    employeeDropdown.addEventListener('change', () => {
+      selectedEmployeeId = employeeDropdown.value;
+      loadCurrentStatus();
+      updateButtonStates();
+    });
+
+    leaveButton.addEventListener('click', () => {
+      if (!selectedEmployeeId) return showToast('Select an employee!', 'error');
+      const date = prompt("Enter leave date (YYYY-MM-DD):");
+      const reason = prompt("Enter reason:");
+      if (!date || !reason) return showToast('Date and reason required.', 'error');
+
+      const data = JSON.parse(localStorage.getItem('attendanceData')) || [];
+      const exists = data.some(r => r.employee_id === selectedEmployeeId && r.event_type === 'leave' && r.timestamp.startsWith(date));
+      if (exists) return showToast('Leave already recorded.', 'error');
+
+      data.push({
+        employee_id: selectedEmployeeId,
+        event_type: 'leave',
+        timestamp: date + 'T00:00:00Z',
+        reason
+      });
+
+      localStorage.setItem('attendanceData', JSON.stringify(data));
+      showToast('Leave recorded');
+      loadCurrentStatus();
+    });
+
+    clearDataButton.addEventListener('click', () => {
+      passwordModal.classList.remove('hidden');
+    });
+
+    cancelPassword.addEventListener('click', () => {
+      passwordModal.classList.add('hidden');
+      adminPassword.value = '';
+    });
+
+    confirmClear.addEventListener('click', () => {
+      if (adminPassword.value === ADMIN_PASSWORD) {
+        localStorage.removeItem('attendanceData');
+        showToast('All data cleared');
+        loadCurrentStatus();
+        updateButtonStates();
+        passwordModal.classList.add('hidden');
+        adminPassword.value = '';
+      } else {
+        showToast('Wrong password', 'error');
+      }
+    });
+
+    startButton.addEventListener('click', () => recordAttendance('day_start'));
+    endButton.addEventListener('click', () => recordAttendance('day_end'));
+    lunchStartButton.addEventListener('click', () => recordAttendance('lunch_start'));
+    lunchEndButton.addEventListener('click', () => recordAttendance('lunch_end'));
+
+    loadCurrentStatus();
+  </script>
+</body>
+</html>
